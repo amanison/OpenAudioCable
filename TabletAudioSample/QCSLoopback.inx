@@ -1,0 +1,222 @@
+[Version]
+Signature   = "$Windows NT$"
+Class       = MEDIA
+Provider    = %ProviderName%
+ClassGUID   = {4d36e96c-e325-11ce-bfc1-08002be10318}
+DriverVer   = 11/20/2020, 1.0.0.1
+CatalogFile = sysvad.cat
+PnpLockDown = 1
+
+[SourceDisksNames]
+222="QCSVAC Driver Disk","",222
+
+[SourceDisksFiles]
+QCSLoopback.sys=222
+
+[SignatureAttributes]
+QCSLoopback.sys=SignatureAttributes.DRM
+
+[SignatureAttributes.DRM]
+DRMLevel=1300
+
+[SignatureAttributes.PETrust]
+PETrust=true
+
+[Manufacturer]
+%MfgName%=QCSVAC,NT$ARCH$
+
+[QCSVAC.NT$ARCH$]
+%QCSVAC_SA.DeviceDesc%=QCSVAC_SA, Root\sysvad_QCSLoopback
+
+[DestinationDirs]
+QCSVAC_SA.CopyList=13 ; 13=Package's DriverStore directory
+
+;======================================================
+; QCSVAC_SA
+;======================================================
+[QCSVAC_SA.CopyList]
+QCSLoopback.sys
+
+[QCSVAC_SA.AddReg]
+HKR,,AssociatedFilters,,"wdmaud,redbook"
+HKR,,Driver,,QCSLoopback.sys
+
+;
+; For demo only, please review these power management settings for your architecture.
+;
+HKR,PowerSettings,SingleComponentMultiFxStates,3,1,0,0,0  ; Turn on multi Fx support.
+HKR,PowerSettings,ConservationIdleTime,3,3,0,0,0          ; 3 seconds for idle power management when on battery
+HKR,PowerSettings,PerformanceIdleTime,3,3,0,0,0           ; 3 seconds for idle power management when on AC power
+HKR,PowerSettings,IdlePowerState,3,3,0,0,0                ; go to D3 for idle power management
+
+HKR,Drivers,SubClasses,,"wave,mixer"
+
+HKR,Drivers\wave\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\mixer\wdmaud.drv,Driver,,wdmaud.drv
+
+HKR,Drivers\wave\wdmaud.drv,Description,,%QCSVAC_SA.DeviceDesc%
+HKR,Drivers\mixer\wdmaud.drv,Description,,%QCSVAC_SA.DeviceDesc%
+
+HKR,%MEDIA_CATEGORIES%\%MicrophoneCustomNameGUID%,Name,,%MicrophoneCustomName%
+
+;======================================================
+; render interfaces: speaker (internal)
+;======================================================
+[QCSVAC.I.WaveSpeaker]
+AddReg=QCSVAC.I.WaveSpeaker.AddReg
+
+[QCSVAC.I.WaveSpeaker.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%QCSVAC.WaveSpeaker.szPname%
+
+[QCSVAC.I.TopologySpeaker]
+AddReg=QCSVAC.I.TopologySpeaker.AddReg
+
+[QCSVAC.I.TopologySpeaker.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%QCSVAC.TopologySpeaker.szPname%
+
+HKR,EP\0,%PKEY_AudioEndpoint_Association%,,%KSNODETYPE_ANY%
+HKR,FX\0,%PKEY_FX_Association%,,%KSNODETYPE_ANY%
+
+; The following lines opt-in to pull mode.
+;HKR,EP\0,%PKEY_AudioEndpoint_Supports_EventDriven_Mode%,0x00010001,0x1
+
+;======================================================
+; capture interfaces: microphone (internal)
+;======================================================
+[QCSVAC.I.WaveMicrophone]
+AddReg=QCSVAC.I.WaveMicrophone.AddReg
+[QCSVAC.I.WaveMicrophone.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%QCSVAC.WaveMicrophone.szPname%
+
+[QCSVAC.I.TopologyMicrophone]
+AddReg=QCSVAC.I.TopologyMicrophone.AddReg
+
+[QCSVAC.I.TopologyMicrophone.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%QCSVAC.TopologyMicrophone.szPname%
+
+HKR,EP\0,%PKEY_AudioEndpoint_Association%,,%KSNODETYPE_ANY%
+HKR,FX\0,%PKEY_FX_Association%,,%KSNODETYPE_ANY%
+
+; The following lines opt-in to pull mode.
+;HKR,EP\0,%PKEY_AudioEndpoint_Supports_EventDriven_Mode%,0x00010001,0x1
+
+; The following line overrides the default volume (in dB) for an endpoint.
+; It is only applicable when hardware volume is not implemented.
+; Float value expressed in fixed point 16.16 format and stored as a DWORD.
+; 10 dB
+;HKR,EP\0,%PKEY_AudioEndpoint_Default_VolumeInDb%,0x00010001,0xA0000
+;-10 dB
+;HKR,EP\0,%PKEY_AudioEndpoint_Default_VolumeInDb%,0x00010001,0xFFF60000
+
+;======================================================
+; QCSVAC_SA
+;======================================================
+[QCSVAC_SA.NT]
+Include=ks.inf,wdmaudio.inf
+Needs=KS.Registration, WDMAUDIO.Registration
+CopyFiles=QCSVAC_SA.CopyList
+AddReg=QCSVAC_SA.AddReg
+
+[QCSVAC_SA.NT.Interfaces]
+;
+; Interfaces for speaker (internal) render endpoint.
+;
+AddInterface=%KSCATEGORY_AUDIO%, %KSNAME_WaveSpeaker%, QCSVAC.I.WaveSpeaker
+AddInterface=%KSCATEGORY_RENDER%, %KSNAME_WaveSpeaker%, QCSVAC.I.WaveSpeaker
+AddInterface=%KSCATEGORY_REALTIME%, %KSNAME_WaveSpeaker%, QCSVAC.I.WaveSpeaker
+AddInterface=%KSCATEGORY_AUDIO%, %KSNAME_TopologySpeaker%, QCSVAC.I.TopologySpeaker
+AddInterface=%KSCATEGORY_TOPOLOGY%, %KSNAME_TopologySpeaker%, QCSVAC.I.TopologySpeaker
+
+;
+; Interfaces for microphone (internal) capture endpoint
+;
+AddInterface=%KSCATEGORY_AUDIO%,    %KSNAME_WaveMicrophone%, QCSVAC.I.WaveMicrophone
+AddInterface=%KSCATEGORY_REALTIME%, %KSNAME_WaveMicrophone%, QCSVAC.I.WaveMicrophone
+AddInterface=%KSCATEGORY_CAPTURE%,  %KSNAME_WaveMicrophone%, QCSVAC.I.WaveMicrophone
+AddInterface=%KSCATEGORY_AUDIO%,    %KSNAME_TopologyMicrophone%, QCSVAC.I.TopologyMicrophone
+AddInterface=%KSCATEGORY_TOPOLOGY%, %KSNAME_TopologyMicrophone%, QCSVAC.I.TopologyMicrophone
+
+[QCSVAC_SA.NT.Services]
+AddService=sysvad_qcsloopback,0x00000002,sysvad_QCSLoopback_Service_Inst
+
+[sysvad_QCSLoopback_Service_Inst]
+DisplayName=%QCSVAC_QCSLoopback.SvcDesc%
+ServiceType=1
+StartType=3
+ErrorControl=1
+ServiceBinary=%13%\QCSLoopback.sys
+
+[QCSVAC_SA.NT.HW]
+AddReg = AUDIOHW.AddReg
+
+[AUDIOHW.AddReg]
+; FILE_DEVICE_SOUND
+HKR,,DeviceType,0x10001,0x0000001D
+; SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RWX_RES_RWX
+HKR,,Security,,"D:P(A;;GA;;;SY)(A;;GRGWGX;;;BA)(A;;GRGWGX;;;WD)(A;;GRGWGX;;;RC)"
+
+;======================================================
+; WDF
+;======================================================
+[QCSVAC_SA.NT.Wdf]
+KmdfService = sysvad_qcsloopback, QCSVAC_SA_WdfSect
+[QCSVAC_SA_WdfSect]
+KmdfLibraryVersion = 1.15
+
+;======================================================
+; COMMON
+;======================================================
+[Strings]
+
+;Non-localizable
+
+KSNAME_WaveSpeaker="WaveSpeaker"
+KSNAME_TopologySpeaker="TopologySpeaker"
+
+KSNAME_WaveMicrophone="WaveMicrophone"
+KSNAME_TopologyMicrophone="TopologyMicrophone"
+
+Proxy.CLSID="{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
+KSCATEGORY_AUDIO="{6994AD04-93EF-11D0-A3CC-00A0C9223196}"
+KSCATEGORY_RENDER="{65E8773E-8F56-11D0-A3B9-00A0C9223196}"
+KSCATEGORY_CAPTURE="{65E8773D-8F56-11D0-A3B9-00A0C9223196}"
+KSCATEGORY_REALTIME ="{EB115FFC-10C8-4964-831D-6DCB02E6F23F}"
+KSCATEGORY_TOPOLOGY = "{DDA54A40-1E4C-11D1-A050-405705C10000}"
+
+KSNODETYPE_ANY   = "{00000000-0000-0000-0000-000000000000}"
+
+PKEY_AudioEndpoint_Association               = "{1DA5D803-D492-4EDD-8C23-E0C0FFEE7F0E},2"
+;PKEY_AudioEndpoint_Supports_EventDriven_Mode = "{1DA5D803-D492-4EDD-8C23-E0C0FFEE7F0E},7"
+;PKEY_AudioEndpoint_Default_VolumeInDb        = "{1DA5D803-D492-4EDD-8C23-E0C0FFEE7F0E},9"
+
+PKEY_FX_Association         = "{D04E05A6-594B-4FB6-A80D-01AF5EED7D1D},0"
+;PKEY_FX_EndpointEffectClsid = "{D04E05A6-594B-4fb6-A80D-01AF5EED7D1D},7"
+;PKEY_FX_KeywordDetector_ModeEffectClsid = "{D04E05A6-594B-4fb6-A80D-01AF5EED7D1D},9"
+
+; Driver developers would replace these CLSIDs with those of their own APOs
+;FX_DISCOVER_EFFECTS_APO_CLSID  = "{889C03C8-ABAD-4004-BF0A-BC7BB825E166}"
+
+MEDIA_CATEGORIES = "MediaCategories"
+MicrophoneCustomNameGUID = {d48deb08-fd1c-4d1e-b821-9064d49ae96e}
+
+;Localizable
+
+ProviderName = "QCS"
+MfgName      = "QCS"
+MsCopyRight  = "BSD"
+
+QCSVAC_SA.DeviceDesc="Virtual Audio Cable (WDM) - QCSVAC"
+QCSVAC_QCSLoopback.SvcDesc="Virtual Audio Cable (WDM) - QCSVAC"
+
+;; friendly names
+QCSVAC.WaveSpeaker.szPname="QCSVAC Wave Speaker"
+QCSVAC.TopologySpeaker.szPname="QCSVAC Topology Speaker"
+
+QCSVAC.WaveMicrophone.szPname="QCSVAC Wave Microphone"
+QCSVAC.TopologyMicrophone.szPname="QCSVAC Topology Microphone"
+
+MicrophoneCustomName= "Internal Microphone"
